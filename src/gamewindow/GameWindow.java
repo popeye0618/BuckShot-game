@@ -32,7 +32,7 @@ public class GameWindow extends JFrame implements Game.IGameListener {
 
         // 상단 패널: 딜러의 목숨과 아이템 표시
         JPanel topPanel = new JPanel(new BorderLayout());
-        dealerLivesLabel = new JLabel("딜러 목숨: " + game.getComLife(), SwingConstants.CENTER);
+        dealerLivesLabel = new JLabel("딜러 체력: " + game.getComLife(), SwingConstants.CENTER);
         JLabel dealerItems = new JLabel("아이템: " + Arrays.toString(game.getComItems()), SwingConstants.CENTER);
         topPanel.add(dealerLivesLabel, BorderLayout.NORTH);
         topPanel.add(dealerItems, BorderLayout.SOUTH);
@@ -42,7 +42,7 @@ public class GameWindow extends JFrame implements Game.IGameListener {
         JPanel middlePanel = new JPanel(new GridLayout(1, 2)); // 2개의 컬럼을 가진 그리드 레이아웃
 
         Font font = new Font("monaco", Font.PLAIN, 12);
-        actionLog = new JTextArea("벅샷 룰렛에 오신걸 환영합니다!!\n당신의 선공으로 게임을 시작합니다!\n");
+        actionLog = new JTextArea("\t\t 벅샷 룰렛에 오신걸 환영합니다!!\n\t\t당신의 선공으로 게임을 시작합니다!\n");
         actionLog.setEditable(false);  // 텍스트 에디트 불가능 설정
         actionLog.setFont(font);
         scrollPane = new JScrollPane(actionLog);
@@ -64,7 +64,7 @@ public class GameWindow extends JFrame implements Game.IGameListener {
         refillPromptLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         rightPanel.add(refillPromptLabel);
 
-        reloadBulletsButton = new JButton("총알 리필하기");
+        reloadBulletsButton = new JButton("재장전");
         reloadBulletsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         reloadBulletsButton.addActionListener(e -> game.reloadBullets());
         rightPanel.add(reloadBulletsButton);
@@ -84,7 +84,7 @@ public class GameWindow extends JFrame implements Game.IGameListener {
             game.fireToUser();
         });
         fireAtDealerButton.addActionListener(e -> {
-            game.fireToCom();
+            game.fireToDealer();
         });
         buttonPanel.add(fireAtSelfButton);
         buttonPanel.add(fireAtDealerButton);
@@ -97,7 +97,7 @@ public class GameWindow extends JFrame implements Game.IGameListener {
     }
 
     private void appendActionLog(String message) {
-        actionLog.append("[진행]: " + message + "\n");
+        actionLog.append(message + "\n");
         actionLog.setCaretPosition(actionLog.getDocument().getLength()); // 스크롤을 로그의 끝으로 이동
     }
 
@@ -127,14 +127,59 @@ public class GameWindow extends JFrame implements Game.IGameListener {
     public void updatePlayerTurn(boolean isMyTurn) {
         fireAtSelfButton.setEnabled(isMyTurn);
         fireAtDealerButton.setEnabled(isMyTurn);
-        if (!isMyTurn) {
-            // 컴퓨터의 턴이 진행되는 로직을 여기에 구현
-        }
     }
 
     @Override
-    public void onEnemyLivesUpdated(int lives, String message) {
+    public void onDealerLivesUpdated(int lives, String message) {
         dealerLivesLabel.setText("딜러 체력: " + lives);
         appendActionLog(message);
     }
+
+    @Override
+    public void addLog(String message) {
+        appendActionLog(message);
+    }
+
+    @Override
+    public void gameEnded(String message) {
+        Object[] options = {"게임 다시하기", "종료하기"};
+        int choice = JOptionPane.showOptionDialog(this,
+                message,
+                "게임 종료",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            restartGame();  // 게임 재시작 메서드
+        } else {
+            System.exit(0);  // 프로그램 종료
+        }
+    }
+
+    private void restartGame() {
+        game.restart();
+        resetUIComponents();
+        updateUI();
+    }
+
+    private void resetUIComponents() {
+        // 텍스트 영역과 라벨을 초기화
+        actionLog.setText("\t\t 벅샷 룰렛에 오신걸 환영합니다!!\n\t\t당신의 선공으로 게임을 시작합니다!\n");
+        playerLivesLabel.setText("내 체력: " + game.getPlayerLife());
+        dealerLivesLabel.setText("딜러 체력: " + game.getComLife());
+        ammoCountLabel.setText("실탄: " + game.getRealBullet() + ", 공포탄: " + game.getBlankBullet());
+        refillPromptLabel.setText("남은 실탄이 0이면 누르세요.");
+    }
+
+
+    private void updateUI() {
+        // 게임 상태에 따라 UI 요소를 업데이트
+        playerLivesLabel.setText("내 체력: " + game.getPlayerLife());
+        dealerLivesLabel.setText("딜러 체력: " + game.getComLife());
+        ammoCountLabel.setText("실탄: " + game.getRealBullet() + ", 공포탄: " + game.getBlankBullet());
+    }
+
 }

@@ -54,4 +54,10 @@ public class Player {
     public boolean isMyTurn() {
         return isMyTurn;
     }
+
+    public void setInit(int life, String[] itemList, boolean turn) {
+        this.life = life;
+        this.itemList = itemList;
+        this.isMyTurn = turn;
+    }
 }
